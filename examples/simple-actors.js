@@ -33,6 +33,7 @@ Point.prototype.update = function () {
 }
 
 Point.prototype.render = function (s) {
+  if (this.draw === false) return
   var len = (s.x | 0) + 1
   process.stdout.write(
     '\033[s\033[14C'
@@ -55,18 +56,18 @@ function FrameCounter () {
 util.inherits(FrameCounter, slag.Actor)
 
 FrameCounter.prototype.update = function () {
-  this.now = Date.now()
-  this.updatelag = this.now - this.before
-  this.before = this.now  
   this.frames++
-  return { frames: this.frames }
+  return { frames: '' + this.frames }
 }
 
 FrameCounter.prototype.render = function (s) {
+  this.now = Date.now()
+  this.updatelag = this.now - this.before
+  this.before = this.now  
   process.stdout.write(
     '\033[s'
-  + 'F:' + this.frames
-  + ' l:' + (this.updatelag * 1/1e4).toFixed(global.DECIMAL_DIGITS)
+  + 'F:' + s.frames
+  + ' l:' + (this.updatelag * 1/1e3).toFixed(global.DECIMAL_DIGITS)
   + '\033[u'
   )
 }

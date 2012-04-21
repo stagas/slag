@@ -7,9 +7,9 @@ var world = slag.createWorld()
 
 // join a zillion actors :P
 var point
-for (var i = 5000; i--;) {
+for (var i = 10000; i--;) {
   point = new actors.Point()
-  if (i > 0) point.render = function () {}
+  if (i > 0) point.draw = false
   world.join(point)
 }
 
@@ -20,7 +20,7 @@ console.log('Number of actors:', world.join(new actors.FrameCounter))
 world.prepare()
 
 // set fps
-world.fps = 4
+world.fps = 2
 
 console.log('WORLD:', world)
 
