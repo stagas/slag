@@ -36,8 +36,8 @@ Point.prototype.render = function (s) {
   var len = (s.x | 0) + 1
   process.stdout.write(
     '\033[s\033[14C'
-  + 'x ipl:' + s.x.toFixed(global.DECIMAL_DIGITS)
-  + ' x real:' + this.x.toFixed(global.DECIMAL_DIGITS)
+  + 'ipl x:' + s.x.toFixed(global.DECIMAL_DIGITS)
+  + ' real x:' + this.x.toFixed(global.DECIMAL_DIGITS)
   + new Array(len).join(' ')
   + '*'
   + new Array(Math.max(0, 42 - len)).join(' ')
@@ -48,11 +48,16 @@ Point.prototype.render = function (s) {
 function FrameCounter () {
   slag.Actor.call(this)
   this.frames = 0
+  this.now = Date.now()
+  this.before = this.now
 }
 
 util.inherits(FrameCounter, slag.Actor)
 
 FrameCounter.prototype.update = function () {
+  this.now = Date.now()
+  this.updatelag = this.now - this.before
+  this.before = this.now  
   this.frames++
   return { frames: this.frames }
 }
@@ -60,7 +65,8 @@ FrameCounter.prototype.update = function () {
 FrameCounter.prototype.render = function (s) {
   process.stdout.write(
     '\033[s'
-  + 'FRAME:' + this.frames
+  + 'F:' + this.frames
+  + ' l:' + (this.updatelag * 1/1e4).toFixed(global.DECIMAL_DIGITS)
   + '\033[u'
   )
 }
