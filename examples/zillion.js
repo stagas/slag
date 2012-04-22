@@ -5,24 +5,47 @@ var actors = require('./simple-actors')
 // create world
 var world = slag.createWorld()
 
-// join a zillion actors :P
+// join network thing
+var net = new slag.Actors.Net(world)
+net.onSync(function (diff) {
+  //console.log('diff:', diff)
+})
+
+world.join(net)
+
+var scr = new actors.Screen
+world.join(scr)
+
+var keys = new actors.KeyHandler
+world.join(keys)
+
+// create and join frame counter actor
+world.join(new actors.FrameCounter)
+
+// create a zillion points
 var point
-for (var i = 10000; i--;) {
+for (var i = 1000; i--;) {
   point = new actors.Point()
-  if (i > 0) point.draw = false
+
+  // the last point
+  if (!i) {
+    // flags
+    point.draw = true
+    point.isNetOwner = true
+
+    // attach keyhandler to point
+    keys.control(point)
+  }
+
+  // join point actor in world
   world.join(point)
 }
 
-// create and join frame counter actor
-console.log('Number of actors:', world.join(new actors.FrameCounter))
-
-// prepare world
-world.prepare()
+// start world
+world.start()
 
 // set fps
-world.fps = 2
-
-console.log('WORLD:', world)
+world.fps = 60
 
 // loop world
 world.loop(function () {
