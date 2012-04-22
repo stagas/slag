@@ -38,6 +38,9 @@ world.join(point)
 // start world
 world.start()
 
+scr.hello()
+point.hello()
+
 // set fps
 world.fps = 60
 

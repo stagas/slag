@@ -3,9 +3,15 @@ var slag = require('../')
 
 var Actor = slag.Actor
 
+var matrix = new Array(21)
+              .join(new Array(61)
+              .join(' ') + '\n')
+              .split('')
+
 function Screen () {
   Actor.call(this)
-  this.points = []
+  this.name = 'screen'
+  this.points = matrix.slice()
 }
 
 util.inherits(Screen, Actor)
@@ -21,13 +27,8 @@ Screen.prototype.isRelevantTo = function (actor) {
 }
 
 Screen.prototype.render = function () {
-  var points = this.points = []
-
-  this.getRelevant().forEach(function (actor) {
-    points.push({ x: actor._alpha.x | 0, y: actor._alpha.y | 0 })
-  })
-
-  writePoints(this.points, 'o')
+  process.stdout.write(this.points.join('') + '\x1b[1;1H')
+  this.points = matrix.slice()
 }
 
 function Point () {
@@ -43,15 +44,30 @@ function Point () {
 
 util.inherits(Point, Actor)
 
+Point.renderfn = function (s) {
+  this.scr.points[ (s.x | 0) + (s.y | 0)*61 ] = 'o'
+}
+
+Point.prototype.welcome = function (actor) {
+  if ('screen' == actor.name) {
+    this.constructor.prototype.scr = actor
+    this.render = Point.renderfn
+  }
+}
+
 Point.prototype.advance = function () {
   this.vx = this.speed * Math.cos(this.a * (Math.PI / 180))
   this.vy = (this.speed / 2) * Math.sin(this.a * (Math.PI / 180))
   this.x += this.vx
   this.y += this.vy
+  if (this.x < 0) this.x = 0
+  else if (this.x >= 59) this.x = 59
+  if (this.y < 0) this.y = 0
+  else if (this.y >= 19) this.y = 19
   this.speed *= 0.98
 }
 
-var Direction = {
+Point.Direction = {
   'right': 0
 , 'left': 180
 , 'down': 90
@@ -62,7 +78,7 @@ Point.prototype.update = function () {
   if (this.input) {
     this.speed += 0.015
     this.speed = Math.min(this.speed, 1)
-    this.a = Direction[this.input]
+    this.a = Point.Direction[this.input]
   }
 
   this.advance()
@@ -79,20 +95,30 @@ function FrameCounter () {
 
 util.inherits(FrameCounter, Actor)
 
+FrameCounter.prototype.isRelevantTo = function (actor) {
+  if ('screen' == actor.name) return true
+}
+
+FrameCounter.prototype.welcome = function (actor) {
+  if ('screen' == actor.name) {
+    this.render = function (s) {
+      this.now = Date.now()
+      this.updatelag = this.now - this.before
+      this.before = this.now      
+      var str = 'F:' + s.frames
+        + ' l:'
+        + (this.updatelag * 1/1e3)
+            .toFixed(global.DECIMAL_DIGITS)
+      str.split('').forEach(function (char, i) {
+        actor.points[i] = char
+      })
+    }
+  }
+}
+
 FrameCounter.prototype.update = function () {
   this.frames++
   return { frames: '' + this.frames }
-}
-
-FrameCounter.prototype.render = function (s) {
-  this.now = Date.now()
-  this.updatelag = this.now - this.before
-  this.before = this.now
-  cursorTo(process.stdout, 0, 0)
-  process.stdout.write(
-    'F:' + s.frames
-  + ' l:' + (this.updatelag * 1/1e3).toFixed(global.DECIMAL_DIGITS)
-  )
 }
 
 function KeyHandler () {
@@ -143,23 +169,6 @@ exports.Screen = Screen
 exports.Point = Point
 exports.FrameCounter = FrameCounter
 exports.KeyHandler = KeyHandler
-
-function writePoints (points, char) {
-  var m = [], pm = [], s = ''
-  points.forEach(function (point) {
-    pm.push(point.x + ':' + point.y)
-  })
-  for (var y = 0; y < 20; y++) {
-    s = ''
-    for (var x = 0; x < 60; x++) {
-      s = s + (~pm.indexOf(x + ':' + y) ? char : ' ')
-    }
-    m.push(s)
-  }
-
-  cursorTo(process.stdout, 0, 0)
-  process.stdout.write(m.join('\n'))
-}
 
 /**
 * moves the cursor to the x and y coordinate on the given stream

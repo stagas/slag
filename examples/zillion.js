@@ -23,18 +23,19 @@ world.join(keys)
 world.join(new actors.FrameCounter)
 
 // create a zillion points
-var point
+var point, player
 for (var i = 1000; i--;) {
   point = new actors.Point()
 
   // the last point
   if (!i) {
+    player = point
     // flags
-    point.draw = true
-    point.isNetOwner = true
+    player.draw = true
+    player.isNetOwner = true
 
     // attach keyhandler to point
-    keys.control(point)
+    keys.control(player)
   }
 
   // join point actor in world
@@ -43,6 +44,9 @@ for (var i = 1000; i--;) {
 
 // start world
 world.start()
+
+scr.hello()
+player.hello()
 
 // set fps
 world.fps = 60
